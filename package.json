@@ -55,7 +55,8 @@
     "typescript": "^2.7.2",
     "web3": "^1.0.0-beta.24",
     "winston": "^2.4.0",
-    "xss-filters": "^1.2.7"
+    "xss-filters": "^1.2.7",
+    "querystring": "^0.2.0"
   },
   "devDependencies": {
     "@types/bluebird": "^3.5.19",

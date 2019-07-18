@@ -9,6 +9,30 @@
     "RPC_SERVER": {
       "description": "RPC URL of your blockchain node.",
       "value": "http://127.0.0.1:8545"
+    },
+    "ID_NODE": {
+      "description": "id node.",
+      "value": ""
+    },
+    "SLACK_TOKEN": {
+      "description": "slack token.",
+      "value": ""
+    } ,
+    "SLACK_CHANNEL": {
+      "description": "slack clanel.",
+      "value": ""
+    } ,
+    "MAX_BLOCKS_RESET": {
+      "description": "logic to reset",
+      "value": "50"
+    },
+    "TIME_RESET": {
+      "description": "time to reset",
+      "value": "60000"
     }
+
   }
 }
+
+
+

@@ -5,7 +5,11 @@ import { TokenParser } from "./TokenParser";
 import { Config } from "./Config";
 import { LastParsedBlock } from "../models/LastParsedBlockModel";
 import { setDelay } from "./Utils";
+import TeamMessage from "../slack/Team";
 const config = require("config");
+
+
+
 
 /**
  * Parses the blockchain for transactions and tokens.
@@ -17,25 +21,61 @@ export class BlockchainParser {
 
     private transactionParser: TransactionParser;
     private tokenParser: TokenParser;
+    private teamMessage: TeamMessage;
     private maxConcurrentBlocks: number = parseInt(config.get("PARSER.MAX_CONCURRENT_BLOCKS")) || 2;
     private rebalanceOffsets: number[] = [15];
     private forwardParsedDelay: number = parseInt(config.get("PARSER.DELAYS.FORWARD")) || 100;
     private backwardParsedDelay: number = parseInt(config.get("PARSER.DELAYS.BACKWARD")) || 300;
 
+    private maxBlocksToReset: number = parseInt(process.env.MAX_BLOCKS_RESET) || 50;
+    private timeToReset: number = parseInt(process.env.TIME_RESET) || 10*60000;
+    private idNode: string = process.env.ID_NODE;
+    private initReset:boolean=false;
+    private varTimeout:any=null;
+
     constructor() {
         this.transactionParser = new TransactionParser();
         this.tokenParser = new TokenParser();
+        this.teamMessage= new TeamMessage();
     }
 
     public start() {
         this.startForwardParsing();
         this.scheduleBackwardParsing();
+
+        
     }
 
     public startForwardParsing() {
         return BlockchainState.getBlockState().then(([blockInChain, blockInDb]) => {
             const startBlock = blockInDb ? blockInDb.lastBlock : blockInChain - 1;
             const nextBlock: number = startBlock + 1;
+
+            //autostop
+            const latestBlockNumberInDB = blockInDb.lastBlock;
+            const blocksToSync = blockInChain - latestBlockNumberInDB;
+            
+            if(!this.initReset/* && blocksToSync > this.maxBlocksToReset*/){
+                this.initReset=true;
+                
+                this.varTimeout =  setTimeout((async () =>{
+                    winston.error(`ForceReset blocksToSync: ${blocksToSync}`);
+                    await this.teamMessage.sendMessage(`The nodo[${this.idNode}] trust-ray will reset in  ${this.timeToReset} seconds,  blocksToSync: ${blocksToSync} `);
+                    return process.exit(22);
+                }), this.timeToReset);
+
+
+            }
+            
+            if(blocksToSync < this.maxBlocksToReset && this.varTimeout!==null){
+                clearTimeout(this.varTimeout);
+                this.varTimeout=null;
+
+            }
+
+
+
+
 
             if (nextBlock <= blockInChain) {
                 winston.info(`Forward ==> parsing blocks range ${nextBlock} - ${blockInChain}. Difference ${blockInChain - startBlock}`);
@@ -53,6 +93,12 @@ export class BlockchainParser {
                 winston.info("Last block is parsed on the blockchain, waiting for new blocks");
                 this.scheduleForwardParsing();
             }
+
+
+
+
+
+
         }).catch((err: Error) => {
             winston.error("Failed to load initial block state in startForwardParsing: " + err);
             this.scheduleForwardParsing();
