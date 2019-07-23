@@ -10,7 +10,6 @@ class TeamMessage {
       async sendMessage(message: string) {
             try {
                   const url: string = `${this.URL_MSG}token=${this.TOKEN}&channel=${this.CHANNEL}&${querystring.stringify({ text: message })}&pretty=1`;
-                  console.log(url);
                   await axios.get(url);
 
             } catch (error) {

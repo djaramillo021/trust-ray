@@ -50,7 +50,7 @@ export class BlockchainParser {
             const nextBlock: number = startBlock + 1;
 
             //autostop
-            if (!blockInDb === undefined && !blockInDb === null) {
+            if (blockInDb) {
 
                 const latestBlockNumberInDB = blockInDb.lastBlock;
                 if (this.latestBlkNumberInDB == null) {
