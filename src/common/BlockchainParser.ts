@@ -28,7 +28,7 @@ export class BlockchainParser {
     private backwardParsedDelay: number = parseInt(config.get("PARSER.DELAYS.BACKWARD")) || 300;
     private blocklimitReset: number = parseInt(process.env.BLOCK_LIMIT_RESET);
     private counToReset: number = 0;
-    private latestBlkNumberInDB: number = null;
+    private latestBlkNumberInDB: number | null = null;
     private idNode: string = process.env.ID_NODE;
 
     constructor() {
@@ -51,12 +51,11 @@ export class BlockchainParser {
 
             //autostop
             if (blockInDb) {
-
-                const latestBlockNumberInDB = blockInDb.lastBlock;
-                if (this.latestBlkNumberInDB == null) {
+                const latestBlockNumberInDB = Number(blockInDb.lastBlock);
+                if (this.latestBlkNumberInDB === null) {
                     this.latestBlkNumberInDB = latestBlockNumberInDB;
                 } else {
-                    if (this.latestBlkNumberInDB == latestBlockNumberInDB) {
+                    if (this.latestBlkNumberInDB === latestBlockNumberInDB) {
                         this.counToReset = this.counToReset + 1;
                     } else {
                         this.counToReset = 0;
