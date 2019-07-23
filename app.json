@@ -23,7 +23,7 @@
       "value": ""
     } ,
 
-    "LIMIT_RESET": {
+    "BLOCK_LIMIT_RESET": {
       "description": "time to reset",
       "value": "50"
     },
