@@ -63,7 +63,7 @@ export class App {
         // remove for production
         this.app.use(errorHandler());
     }
-
+    
     private checkEnv() {
         if (process.env.MONGODB_URI === undefined ||
             process.env.RPC_SERVER === undefined ||
