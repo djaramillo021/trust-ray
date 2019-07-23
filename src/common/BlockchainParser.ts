@@ -94,11 +94,6 @@ export class BlockchainParser {
                 this.scheduleForwardParsing();
             }
 
-
-
-
-
-
         }).catch((err: Error) => {
             winston.error("Failed to load initial block state in startForwardParsing: " + err);
             this.scheduleForwardParsing();
