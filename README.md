@@ -29,7 +29,7 @@ API for the Trust Ethereum Wallet.
 * Compile TypeScript:
   ```$ npm run build```
 * Start the app:
-   ```$ node dist/server.js```
+   ```$ node dist/Server.js```
 * Run tests:
    ```$ npm run build && npm test```
 

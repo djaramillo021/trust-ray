@@ -11,7 +11,7 @@ import * as winston from "winston";
 const config = require("config");
 const cors = require("cors");
 const compression = require("compression")
-const port = process.env.PORT || 8000;
+const port = process.env.PORT || 4000;
 
 export class App {
 

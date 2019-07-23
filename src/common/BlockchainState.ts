@@ -1,13 +1,17 @@
 import * as winston from "winston";
 import { Config } from "./Config";
 import { LastParsedBlock } from "../models/LastParsedBlockModel";
+
 import { setDelay } from "./Utils";
 const config = require("config");
 
 export class BlockchainState {
+
     getState(): Promise<any> {
         return BlockchainState.getBlockState().then(([blockInChain, blockInDb]) => {
             if (!blockInDb) {
+
+                
                 return new LastParsedBlock({
                     lastBlock: blockInChain,
                     lastBackwardBlock: blockInChain,
@@ -17,6 +21,7 @@ export class BlockchainState {
                 }).save()
             }
 
+   
             if (!blockInDb.lastBlock) {
                 blockInDb.lastBlock = blockInChain
             }

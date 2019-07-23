@@ -18,7 +18,7 @@ const config = require("config");
  * coordinating the flow.
  */
 export class BlockchainParser {
-
+    private _simulateProblem: boolean = (process.env.SIMULATE_PROBLEM == 'true');
     private transactionParser: TransactionParser;
     private tokenParser: TokenParser;
     private teamMessage: TeamMessage;
@@ -27,11 +27,10 @@ export class BlockchainParser {
     private forwardParsedDelay: number = parseInt(config.get("PARSER.DELAYS.FORWARD")) || 100;
     private backwardParsedDelay: number = parseInt(config.get("PARSER.DELAYS.BACKWARD")) || 300;
 
-    private maxBlocksToReset: number = parseInt(process.env.MAX_BLOCKS_RESET) || 50;
-    private timeToReset: number = parseInt(process.env.TIME_RESET) || 10*60000;
+    private limitToReset: number = parseInt(process.env.LIMIT_RESET) || 10*60000;
+    private counToReset:number=0;
+    private latestBlkNumberInDB:number=null;
     private idNode: string = process.env.ID_NODE;
-    private initReset:boolean=false;
-    private varTimeout:any=null;
 
     constructor() {
         this.transactionParser = new TransactionParser();
@@ -47,35 +46,31 @@ export class BlockchainParser {
     }
 
     public startForwardParsing() {
-        return BlockchainState.getBlockState().then(([blockInChain, blockInDb]) => {
+        return BlockchainState.getBlockState().then(async ([blockInChain, blockInDb]) => {
             const startBlock = blockInDb ? blockInDb.lastBlock : blockInChain - 1;
             const nextBlock: number = startBlock + 1;
 
             //autostop
             const latestBlockNumberInDB = blockInDb.lastBlock;
-            const blocksToSync = blockInChain - latestBlockNumberInDB;
-            
-            if(!this.initReset/* && blocksToSync > this.maxBlocksToReset*/){
-                this.initReset=true;
-                
-                this.varTimeout =  setTimeout((async () =>{
-                    winston.error(`ForceReset blocksToSync: ${blocksToSync}`);
-                    await this.teamMessage.sendMessage(`The nodo[${this.idNode}] trust-ray will reset in  ${this.timeToReset} seconds,  blocksToSync: ${blocksToSync} `);
-                    return process.exit(22);
-                }), this.timeToReset);
-
-
-            }
-            
-            if(blocksToSync < this.maxBlocksToReset && this.varTimeout!==null){
-                clearTimeout(this.varTimeout);
-                this.varTimeout=null;
-
+            if(this.latestBlkNumberInDB==null){
+                this.latestBlkNumberInDB=latestBlockNumberInDB;
+            } else{
+                if(this.latestBlkNumberInDB==latestBlockNumberInDB)
+                {
+                    this.counToReset=this.counToReset+1;
+                } else {
+                    this.counToReset=0;
+                }
+                this.latestBlkNumberInDB=latestBlockNumberInDB;
             }
 
 
-
-
+            if(this.counToReset>this.limitToReset){
+                winston.error(`ForceReset blocksToSync: ${this.latestBlkNumberInDB}`);
+                await this.teamMessage.sendMessage(`The nodo[${this.idNode}] trust-ray resets ,  blocksToSync: ${this.latestBlkNumberInDB} `);
+                return process.exit(22);
+            }
+            
 
             if (nextBlock <= blockInChain) {
                 winston.info(`Forward ==> parsing blocks range ${nextBlock} - ${blockInChain}. Difference ${blockInChain - startBlock}`);
@@ -210,12 +205,27 @@ export class BlockchainParser {
     }
 
     private saveLastParsedBlock(block: number) {
+
+        if(this._simulateProblem===true){
+            winston.error(`Force Simulate: ${this._simulateProblem}`);
+            return LastParsedBlock.findOneAndUpdate({}, {}, {upsert: true, new: true}).catch((err: Error) => {
+                winston.error(`Could not save last parsed block to DB with error: ${err}`);
+            });
+        }
+
         return LastParsedBlock.findOneAndUpdate({}, {lastBlock: block}, {upsert: true, new: true}).catch((err: Error) => {
             winston.error(`Could not save last parsed block to DB with error: ${err}`);
         });
     }
 
     private saveLastBackwardBlock(block: number) {
+        if(this._simulateProblem===true){
+            winston.error(`Force Simulate: ${this._simulateProblem}`);
+            return LastParsedBlock.findOneAndUpdate({}, {}, {upsert: true, new: true}).catch((err: Error) => {
+                winston.error(`Could not save last parsed block to DB with error: ${err}`);
+            });
+        }
+        
         return LastParsedBlock.findOneAndUpdate({}, {lastBackwardBlock: block}, {upsert: true}).catch((err: Error) => {
             winston.error(`Could not save lastest backward block to DB with error: ${err}`);
         });

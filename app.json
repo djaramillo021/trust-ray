@@ -22,14 +22,17 @@
       "description": "slack clanel.",
       "value": ""
     } ,
-    "MAX_BLOCKS_RESET": {
-      "description": "logic to reset",
+
+    "LIMIT_RESET": {
+      "description": "time to reset",
       "value": "50"
     },
-    "TIME_RESET": {
-      "description": "time to reset",
-      "value": "60000"
+    "SIMULATE_PROBLEM": {
+      "description": "delete this environment in production",
+      "value": "false"
     }
+
+    
 
   }
 }
