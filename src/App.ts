@@ -20,6 +20,9 @@ export class App {
 
 
     constructor() {
+        // check env
+        this.checkEnv()
+
         // create app
         this.app = express();
 
@@ -59,6 +62,19 @@ export class App {
 
         // remove for production
         this.app.use(errorHandler());
+    }
+
+    private checkEnv() {
+        if (process.env.MONGODB_URI === undefined ||
+            process.env.RPC_SERVER === undefined ||
+            process.env.ID_NODE === undefined ||
+            process.env.SLACK_TOKEN === undefined ||
+            process.env.SLACK_CHANNEL === undefined ||
+            process.env.MAX_BLOCKS_RESET === undefined ||
+            process.env.TIME_RESET === undefined) {
+            throw new Error("Check Environment Variables")
+        }
+
     }
 
     private setupDatabase() {

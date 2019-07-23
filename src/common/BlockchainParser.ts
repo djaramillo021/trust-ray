@@ -27,22 +27,22 @@ export class BlockchainParser {
     private forwardParsedDelay: number = parseInt(config.get("PARSER.DELAYS.FORWARD")) || 100;
     private backwardParsedDelay: number = parseInt(config.get("PARSER.DELAYS.BACKWARD")) || 300;
 
-    private limitToReset: number = parseInt(process.env.LIMIT_RESET) || 10*60000;
-    private counToReset:number=0;
-    private latestBlkNumberInDB:number=null;
+    private limitToReset: number = parseInt(process.env.LIMIT_RESET) || 10 * 60000;
+    private counToReset: number = 0;
+    private latestBlkNumberInDB: number = null;
     private idNode: string = process.env.ID_NODE;
 
     constructor() {
         this.transactionParser = new TransactionParser();
         this.tokenParser = new TokenParser();
-        this.teamMessage= new TeamMessage();
+        this.teamMessage = new TeamMessage();
     }
 
     public start() {
         this.startForwardParsing();
         this.scheduleBackwardParsing();
 
-        
+
     }
 
     public startForwardParsing() {
@@ -51,26 +51,32 @@ export class BlockchainParser {
             const nextBlock: number = startBlock + 1;
 
             //autostop
-            const latestBlockNumberInDB = blockInDb.lastBlock;
-            if(this.latestBlkNumberInDB==null){
-                this.latestBlkNumberInDB=latestBlockNumberInDB;
-            } else{
-                if(this.latestBlkNumberInDB==latestBlockNumberInDB)
-                {
-                    this.counToReset=this.counToReset+1;
+            if (!blockInDb === undefined && !blockInDb === null) {
+
+                const latestBlockNumberInDB = blockInDb.lastBlock;
+                if (this.latestBlkNumberInDB == null) {
+                    this.latestBlkNumberInDB = latestBlockNumberInDB;
                 } else {
-                    this.counToReset=0;
+                    if (this.latestBlkNumberInDB == latestBlockNumberInDB) {
+                        this.counToReset = this.counToReset + 1;
+                    } else {
+                        this.counToReset = 0;
+                    }
+                    this.latestBlkNumberInDB = latestBlockNumberInDB;
                 }
-                this.latestBlkNumberInDB=latestBlockNumberInDB;
+
+                if (this.counToReset > this.limitToReset) {
+                    winston.error(`ForceReset blocksToSync: ${this.latestBlkNumberInDB}`);
+                    await this.teamMessage.sendMessage(`The nodo[${this.idNode}] trust-ray resets ,  blocksToSync: ${this.latestBlkNumberInDB} `);
+                    return process.exit(22);
+                }
+
+            } else {
+                winston.error(`Error: blockInDb is undefined or null`);
+                await this.teamMessage.sendMessage(`Error: blockInDb is undefined or null`);
             }
 
 
-            if(this.counToReset>this.limitToReset){
-                winston.error(`ForceReset blocksToSync: ${this.latestBlkNumberInDB}`);
-                await this.teamMessage.sendMessage(`The nodo[${this.idNode}] trust-ray resets ,  blocksToSync: ${this.latestBlkNumberInDB} `);
-                return process.exit(22);
-            }
-            
 
             if (nextBlock <= blockInChain) {
                 winston.info(`Forward ==> parsing blocks range ${nextBlock} - ${blockInChain}. Difference ${blockInChain - startBlock}`);
@@ -78,7 +84,7 @@ export class BlockchainParser {
                 const lastBlock = blockInChain
                 this.parse(nextBlock, blockInChain, true).then((endBlock: number) => {
                     return this.saveLastParsedBlock(endBlock);
-                }).then((saved: {lastBlock: number}) => {
+                }).then((saved: { lastBlock: number }) => {
                     this.scheduleForwardParsing(this.forwardParsedDelay);
                 }).catch((err: Error) => {
                     winston.error(`Forward parsing failed for blocks ${nextBlock} to ${lastBlock} with error: ${err}. \nRestarting parsing for those blocks...`);
@@ -206,27 +212,27 @@ export class BlockchainParser {
 
     private saveLastParsedBlock(block: number) {
 
-        if(this._simulateProblem===true){
+        if (this._simulateProblem) {
             winston.error(`Force Simulate: ${this._simulateProblem}`);
-            return LastParsedBlock.findOneAndUpdate({}, {}, {upsert: true, new: true}).catch((err: Error) => {
+            return LastParsedBlock.findOneAndUpdate({}, {}, { upsert: true, new: true }).catch((err: Error) => {
                 winston.error(`Could not save last parsed block to DB with error: ${err}`);
             });
         }
 
-        return LastParsedBlock.findOneAndUpdate({}, {lastBlock: block}, {upsert: true, new: true}).catch((err: Error) => {
+        return LastParsedBlock.findOneAndUpdate({}, { lastBlock: block }, { upsert: true, new: true }).catch((err: Error) => {
             winston.error(`Could not save last parsed block to DB with error: ${err}`);
         });
     }
 
     private saveLastBackwardBlock(block: number) {
-        if(this._simulateProblem===true){
+        if (this._simulateProblem) {
             winston.error(`Force Simulate: ${this._simulateProblem}`);
-            return LastParsedBlock.findOneAndUpdate({}, {}, {upsert: true, new: true}).catch((err: Error) => {
+            return LastParsedBlock.findOneAndUpdate({}, {}, { upsert: true, new: true }).catch((err: Error) => {
                 winston.error(`Could not save last parsed block to DB with error: ${err}`);
             });
         }
-        
-        return LastParsedBlock.findOneAndUpdate({}, {lastBackwardBlock: block}, {upsert: true}).catch((err: Error) => {
+
+        return LastParsedBlock.findOneAndUpdate({}, { lastBackwardBlock: block }, { upsert: true }).catch((err: Error) => {
             winston.error(`Could not save lastest backward block to DB with error: ${err}`);
         });
     }
@@ -236,7 +242,7 @@ export class BlockchainParser {
             .map((block: any) => (block !== null && block.transactions !== null && block.transactions.length > 0)
                 ? [block]
                 : [])
-            .reduce( (a: any, b: any) => a.concat(b), [] );
+            .reduce((a: any, b: any) => a.concat(b), []);
     }
 
 }
