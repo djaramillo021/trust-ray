@@ -26,7 +26,6 @@ export class BlockchainParser {
     private rebalanceOffsets: number[] = [15];
     private forwardParsedDelay: number = parseInt(config.get("PARSER.DELAYS.FORWARD")) || 100;
     private backwardParsedDelay: number = parseInt(config.get("PARSER.DELAYS.BACKWARD")) || 300;
-
     private limitToReset: number = parseInt(process.env.LIMIT_RESET) || 10 * 60000;
     private counToReset: number = 0;
     private latestBlkNumberInDB: number = null;
