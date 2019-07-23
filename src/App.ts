@@ -70,7 +70,7 @@ export class App {
             process.env.ID_NODE === undefined ||
             process.env.SLACK_TOKEN === undefined ||
             process.env.SLACK_CHANNEL === undefined ||
-            process.env.LIMIT_RESET === undefined) {
+            process.env.BLOCK_LIMIT_RESET === undefined) {
                 
                 winston.error("There are not environment Variables")
                 throw new Error("There are not environment Variables");

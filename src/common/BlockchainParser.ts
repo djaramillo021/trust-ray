@@ -26,7 +26,7 @@ export class BlockchainParser {
     private rebalanceOffsets: number[] = [15];
     private forwardParsedDelay: number = parseInt(config.get("PARSER.DELAYS.FORWARD")) || 100;
     private backwardParsedDelay: number = parseInt(config.get("PARSER.DELAYS.BACKWARD")) || 300;
-    private limitToReset: number = parseInt(process.env.LIMIT_RESET);
+    private blocklimitReset: number = parseInt(process.env.BLOCK_LIMIT_RESET);
     private counToReset: number = 0;
     private latestBlkNumberInDB: number = null;
     private idNode: string = process.env.ID_NODE;
@@ -64,7 +64,7 @@ export class BlockchainParser {
                     this.latestBlkNumberInDB = latestBlockNumberInDB;
                 }
 
-                if (this.counToReset > this.limitToReset) {
+                if (this.counToReset > this.blocklimitReset) {
                     winston.error(`ForceReset blocksToSync: ${this.latestBlkNumberInDB}`);
                     await this.teamMessage.sendMessage(`The nodo[${this.idNode}] trust-ray resets ,  blocksToSync: ${this.latestBlkNumberInDB} `);
                     return process.exit(22);
